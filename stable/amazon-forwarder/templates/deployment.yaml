@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.name }}
+spec:
+  selector:
+    matchLabels:
+      tier: backing
+      app: {{ .Values.name }}
+  revisionHistoryLimit: {{ .Values.revisionlimit }}
+  template:
+    metadata:
+      labels:
+        tier: backing
+        app: {{ .Values.name }}
+    spec:
+      containers:
+        - name: {{ .Values.name }}
+          image: "{{ .Values.repository }}/{{ .Values.name }}:{{ .Values.imageVersion }}"
+{{- if .Values.volume }}
+{{ toYaml .Values.volume | indent 10 }}
+{{- end }}
+          imagePullPolicy: {{default "IfNotPresent" .Values.pullPolicy}}
+{{- if .Values.args }}
+          args: {{ .Values.args }}
+{{- end }}
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+          ports:
+            - containerPort: {{ .Values.containerPort }}
+          env:
+{{- if .Values.vars }}
+{{ toYaml .Values.vars | indent 12 }}
+{{- end }}
+{{- if .Values.volumeMounts }}
+          volumeMounts:
+{{ toYaml .Values.volumeMounts | indent 12 }}
+{{- end }}
+{{- if .Values.pvc }}
+{{ toYaml .Values.pvc | indent 6 }}
+{{- end }}
+{{- if .Values.volumes }}
+      volumes:
+{{ toYaml .Values.volumes | indent 8 }}
+{{- end }}

@@ -1,0 +1,41 @@
+---
+name: amazon-forwarder
+imageVersion: 1.2.0
+revisionlimit: 2
+replicaCount: 1
+resources:
+  requests:
+    cpu: 50m
+    memory: 8Mi
+containerPort: 8080
+vars:
+- name: AWS_REGION
+  valueFrom:
+    secretKeyRef:
+      name: amazon-forwarder-vars
+      key: aws_region
+- name: AWS_ACCESS_KEY_ID
+  valueFrom:
+    secretKeyRef:
+      name: amazon-forwarder-vars
+      key: aws_access_id
+- name: AWS_SECRET_ACCESS_KEY
+  valueFrom:
+    secretKeyRef:
+      name: amazon-forwarder-vars
+      key: aws_access_key
+- name: MAPPING_FILE
+  valueFrom:
+    secretKeyRef:
+      name: amazon-forwarder-vars
+      key: mapping_file
+volumeMounts:
+  - name: amazon-forwarder-volume
+    mountPath: /config
+volumes:
+  - name: amazon-forwarder-volume
+    secret:
+      secretName: "amazon-forwarder-vars"
+      items:
+      - key: rabbitvariables
+        path: mapping.json
