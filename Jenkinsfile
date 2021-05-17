@@ -64,11 +64,11 @@ pipeline {
                             ROOT_DIR=\$PWD
 
                             # Process all modified chart templates
-                            for dir in \$(git diff-tree --no-commit-id --name-only -r ${GIT_COMMIT} | sed -ne '/\\(\\.yaml\\|\\.tpl\\)\$/p' | sed -e 's|\\([^/]\\+/[^/]\\+\\)/.*|\\1|' | uniq); do
+                            for dir in \$(git diff-tree --no-commit-id --name-only -r -m ${GIT_COMMIT} | sed -ne '/\\(\\.yaml\\|\\.tpl\\)\$/p' | sed -e 's|\\([^/]\\+/[^/]\\+\\)/.*|\\1|' | uniq); do
                                 cd \$dir
 
                                 CHART_NAME=\$(basename \$PWD)
-                                CHART_VERSION=\$(cat Chart.yaml | yq -r '.version')
+                                CHART_VERSION=\$(cat Chart.yaml | yq e '.version' -)
 
                                 (set +x; echo "\n[1mPackaging \$dir ...[0m")
                                 if ! helm package .; then
@@ -76,11 +76,11 @@ pipeline {
                                     break
                                 fi
 
-                                # (set +x; echo "\n[1mPublishing \$dir ...[0m")
-                                # if ! curl --data-binary "@\$CHART_NAME-\$CHART_VERSION.tgz" https://chartmuseum.aba.land/api/charts -L; then
-                                #     (set +x; echo "[31mError: chart could not be published! Review error messages.[0m")
-                                #     break
-                                # fi
+                                (set +x; echo "\n[1mPublishing \$dir ...[0m")
+                                if ! curl --data-binary "@\$CHART_NAME-\$CHART_VERSION.tgz" https://chartmuseum.local/api/charts -L; then
+                                    (set +x; echo "[31mError: chart could not be published! Review error messages.[0m")
+                                    break
+                                fi
 
                                 cd \$ROOT_DIR
                             done
